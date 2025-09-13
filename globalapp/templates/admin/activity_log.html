@@ -1,0 +1,136 @@
+{% extends "unfold/layouts/base_simple.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-slate-950 dark:to-indigo-950 p-6" 
+     x-data="{ search: '', filterUser: '', filterModel: '', filterAction: '', filterBranch: '' }">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center space-x-4 mb-2">
+                <div class="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                        Activity Log
+                    </h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Track all system activities and changes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <!-- Search -->
+            <input type="text" placeholder="Search activities..."
+                   x-model="search"
+                   class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 
+                          dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+            <!-- Filter by User -->
+            <select x-model="filterUser"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 
+                           dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">All Users</option>
+                {% for log in history_list|dictsort:"user" %}
+                    {% ifchanged log.user %}
+                        <option value="{{ log.user }}">{{ log.user }}</option>
+                    {% endifchanged %}
+                {% endfor %}
+            </select>
+
+            <!-- Filter by Branch -->
+            <select x-model="filterBranch"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 
+                           dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">All Branches</option>
+                {% for log in history_list|dictsort:"branch" %}
+                    {% ifchanged log.branch %}
+                        <option value="{{ log.branch }}">{{ log.branch }}</option>
+                    {% endifchanged %}
+                {% endfor %}
+            </select>
+
+            <!-- Filter by Model -->
+            <select x-model="filterModel"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 
+                           dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">All Models</option>
+                {% for log in history_list|dictsort:"model" %}
+                    {% ifchanged log.model %}
+                        <option value="{{ log.model }}">{{ log.model }}</option>
+                    {% endifchanged %}
+                {% endfor %}
+            </select>
+
+            <!-- Filter by Action -->
+            <select x-model="filterAction"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 
+                           dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="">All Actions</option>
+                {% for log in history_list|dictsort:"change" %}
+                    {% ifchanged log.change %}
+                        <option value="{{ log.change }}">{{ log.change }}</option>
+                    {% endifchanged %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Main Table Card -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
+            <!-- Table Header -->
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span>Activity Records</span>
+                </h2>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" style="width: -webkit-fill-available;">
+                    <thead class="bg-gray-50 shadow-2xl">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">Date</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">User</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">Branch</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">Model</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">Action</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase" style="color:#000">Object</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for log in history_list %}
+                        <tr class="hover:bg-blue-50 dark:hover:bg-gray-800 transition"
+                            x-show="
+                                (search === '' || '{{ log.user }} {{ log.branch }} {{ log.model }} {{ log.change }} {{ log.object_repr }}'.toLowerCase().includes(search.toLowerCase())) 
+                                && (filterUser === '' || filterUser === '{{ log.user }}')
+                                && (filterBranch === '' || filterBranch === '{{ log.branch }}')
+                                && (filterModel === '' || filterModel === '{{ log.model }}')
+                                && (filterAction === '' || filterAction === '{{ log.change }}')
+                            ">
+                            <td class="px-6 py-4 text-sm">{{ log.date|date:"Y-m-d H:i:s" }}</td>
+                            <td class="px-6 py-4 text-sm">{{ log.user }}</td>
+                            <td class="px-6 py-4 text-sm">{{ log.branch }}</td>
+                            <td class="px-6 py-4 text-sm">{{ log.model }}</td>
+                            <td class="px-6 py-4 text-sm">{{ log.change }}</td>
+                            <td class="px-6 py-4 text-sm">{{ log.object_repr }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alpine.js -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
