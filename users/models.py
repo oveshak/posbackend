@@ -52,6 +52,28 @@ class MyUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
+class Area(Common):
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Area Name"
+    )
+  
+    address = models.TextField(verbose_name="Address")
+  
+    area_staf = models.ManyToManyField(
+        'Users',
+        blank=True,
+        verbose_name="AreaStaf"
+    )
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Area"
+        verbose_name_plural = "Areas"
+
+    def __str__(self):
+        return self.name
+
 
 class Branch(Common):
     name = models.CharField(
@@ -70,6 +92,11 @@ class Branch(Common):
         blank=True,
         related_name='managed_branch',
         verbose_name="Manager"
+    )
+    total_area = models.ManyToManyField(
+        'Area',
+        blank=True,
+        verbose_name="TotalArea"
     )
     history = HistoricalRecords()
 

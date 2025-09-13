@@ -166,9 +166,9 @@ except:
     pass
 
 from globalapp.views import BaseViews
-from .models import Roles, Users, Branch
+from .models import Area, Roles, Users, Branch
 from .serializers import (
-    AllUserSerializer, CustomTokenObtainPairSerializer, GroupSerializer,
+    AllUserSerializer, AreaSerializer, CustomTokenObtainPairSerializer, GroupSerializer,
     PermissionSerializer, RolesSerializer, UsersSerializer, BranchSerializer
 )
 
@@ -198,14 +198,59 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             response.data["user"] = {"data": serializer.data}
         return response
 
+class AreaViewSet(BaseViews):
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    model_name = Area
+    methods = [
+        "list", "retrieve", "create", "update", "partial_update",
+        "destroy", "soft_delete", "change_status", "restore_soft_deleted"
+    ]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        area_staf_data = self.request.data.getlist('area_staf[]') or self.request.data.get('area_staf[]', [])
+        if area_staf_data:
+            instance.area_staf.set([int(pk) for pk in area_staf_data])
+        return instance
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        area_staf_data = self.request.data.getlist('area_staf[]') or self.request.data.get('area_staf[]', [])
+        if area_staf_data is not None:
+            instance.area_staf.set([int(pk) for pk in area_staf_data])
+        return instance
+
 class BranchViewSet(BaseViews):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     model_name = Branch
-    methods = ["list", "retrieve", "create", "update", "partial_update", "destroy", "soft_delete", "change_status", "restore_soft_deleted"]
+    methods = [
+        "list", "retrieve", "create", "update", "partial_update",
+        "destroy", "soft_delete", "change_status", "restore_soft_deleted"
+    ]
 
+    def perform_create(self, serializer):
+        # প্রথমে instance save করি
+        instance = serializer.save()
+
+        # ManyToMany field handle
+        total_area_data = self.request.data.getlist('total_area[]') or self.request.data.get('total_area[]', [])
+        if total_area_data:
+            # str থেকে int এ convert
+            instance.total_area.set([int(pk) for pk in total_area_data])
+        return instance
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        total_area_data = self.request.data.getlist('total_area[]') or self.request.data.get('total_area[]', [])
+        if total_area_data is not None:
+            instance.total_area.set([int(pk) for pk in total_area_data])
+        return instance
 
 class RoleViewSet(BaseViews):
     queryset = Roles.objects.all()
