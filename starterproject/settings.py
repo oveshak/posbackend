@@ -75,6 +75,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
@@ -154,7 +155,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_URL = '/static/'
-STATIC_ROOT = '/home/onroyelf/apimanagement.onroyalfx.com/static'
+# STATIC_ROOT = '/home/onroyelf/apimanagement.onroyalfx.com/static'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# WhiteNoise ব্যবহার করে স্ট্যাটিক ফাইল সার্ভ
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # নিশ্চিত করুন এটি আছে
+]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')
 MEDIA_URL = '/upload/'
