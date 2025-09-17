@@ -1,6 +1,6 @@
 from django.db import models
 from globalapp.models import Common
-from users.models import Branch, Users
+from users.models import Area, Branch, Users
 from products.models import Product
 from contacts.models import Contact, Customer
 from simple_history.models import HistoricalRecords
@@ -316,18 +316,34 @@ class AffiliateCommission(Common):
 
     def __str__(self):
         return f"{self.affiliate_user_name} - {self.commission_amount}"
-
 class LoanType(Common):
     name = models.CharField(
         max_length=150,
         verbose_name="Name"
     )
     behaviour_type = models.JSONField(
-        
         default=list,  # empty list by default
         blank=True,
         null=True
     )
+    # Use a unique related_name to avoid clashes
+    loan_branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name="loan_types",  # unique reverse name
+        null=True,
+        blank=True,
+        verbose_name="Branch"
+    )
+
+    class Meta:
+        verbose_name = "Loan Type"
+        verbose_name_plural = "Loan Types"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
 
     class Meta:
         verbose_name = "Loan Type"
@@ -397,20 +413,58 @@ class Installment(Common):
         choices=STATUS_CHOICES,
         verbose_name="Status"
     )
-
+    branch_name=models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name="brance",
+        null=True,
+        blank=True,
+        verbose_name="Branch"
+    
+    ) 
+    area_name=models.ForeignKey(
+        Area,
+        on_delete=models.CASCADE,
+        related_name="area",
+        null=True,
+        blank=True,
+        verbose_name="Area"
+    )
+    loan_id = models.CharField(max_length=20, default="N/A")
     class Meta:
         verbose_name = "Installment"
         verbose_name_plural = "Installments"
         ordering = ["-installment_date"]
 
-    # def __str__(self):
-    #     return f" {self.installment_date} - {self.amount} ({self.get_status_display()})"
+    def __str__(self):
+        return f" {self.installment_date} - {self.amount} "
+
+
 class Loan(Common):
+    
+
     RECEIVE_TYPE_CHOICES = [
         ("cash", "Cash"),
         ("product", "Product"),
     ]
-
+    
+    branch_name=models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        related_name="loan_branch_set",
+        null=True,
+        blank=True,
+        verbose_name="Branch"
+    
+    ) 
+    area_name=models.ForeignKey(
+        Area,
+        on_delete=models.CASCADE,
+        related_name="loan_area_set",
+        null=True,
+        blank=True,
+        verbose_name="Area"
+    )
     customer_name = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,

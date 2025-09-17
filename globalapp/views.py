@@ -807,6 +807,8 @@ class BaseViews(viewsets.ModelViewSet):
     
 
 
+  
+
     def list(self, request, *args, **kwargs):
         if "list" not in self.methods:
             return self.generate_response(False, status.HTTP_405_METHOD_NOT_ALLOWED, "list_not_allowed")
@@ -827,44 +829,40 @@ class BaseViews(viewsets.ModelViewSet):
         except Exception:
             return self.generate_response(False, status.HTTP_401_UNAUTHORIZED, "invalid_token")
 
-        # 3. Get branch from user
+        # 3. Get user, branch, area
         try:
             user = Users.objects.get(id=user_id)
-            branch = getattr(user, "branch", None)  # ধরে নিচ্ছি user.branch FK বা value
+            branch = getattr(user, "branch", None)
+            area = getattr(user, "area", None)
         except Users.DoesNotExist:
             return self.generate_response(False, status.HTTP_401_UNAUTHORIZED, "user_not_found")
 
-        # 4. Get queryset
+        # 4. Get base queryset
         queryset = self.filter_queryset(self.get_queryset())
 
-        # 5. Filter by any field containing 'branch'
-        branch_fields = [f for f in self.model_name._meta.get_fields() if "branch" in f.name]
+        # 5. Area filter for Installment only
+        if self.model_name.__name__ == "Installment" and area:
+            today = timezone.localdate()  # বর্তমান তারিখ
+            queryset = queryset.filter(
+                area_name=area,
+                installment_date=today
+            )
 
+        # 6. Branch filter (existing logic)
+        branch_fields = [f for f in self.model_name._meta.get_fields() if "branch" in f.name]
         if branch and branch_fields:
             q_objects = Q()
             for f in branch_fields:
                 field_name = f.name
-
-                # ForeignKey বা OneToOneField হলে
                 if isinstance(f, (models.ForeignKey, models.OneToOneField)):
                     q_objects |= Q(**{f"{field_name}_id": branch.id})
-
-                # ManyToMany হলে
                 elif isinstance(f, models.ManyToManyField):
                     q_objects |= Q(**{f"{field_name}__id": branch.id})
-
-                # CharField/TextField হলে branch.name দিয়ে filter
-                elif isinstance(f, models.CharField) or isinstance(f, models.TextField):
+                elif isinstance(f, (models.CharField, models.TextField)):
                     q_objects |= Q(**{field_name: str(branch)})
-
-                # অন্য field হলে skip
-                else:
-                    continue
-
             queryset = queryset.filter(q_objects)
 
-
-        # 6. Pagination
+        # 7. Pagination
         limit = request.GET.get("limit")
         if limit is None:
             serializer = self.get_serializer(queryset, many=True)
@@ -876,6 +874,7 @@ class BaseViews(viewsets.ModelViewSet):
                 serializer = self.get_serializer(page, many=True)
                 token = encode_jwt({"data": serializer.data})
                 return self.get_paginated_response({"token": token})
+
 
 
 

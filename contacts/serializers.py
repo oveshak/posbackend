@@ -7,29 +7,29 @@ from globalapp.serializers import GlobalSerializers
 
 class CustomerGroupSerializer(GlobalSerializers):
     # Create/Update এ শুধু ID নেবে
-    group_leader_user = serializers.PrimaryKeyRelatedField(
-        queryset=Users.objects.all(),
-        required=False,
-        allow_null=True,
-        write_only=True
-    )
+    # group_leader_user = serializers.PrimaryKeyRelatedField(
+    #     queryset=Users.objects.all(),
+    #     required=False,
+    #     allow_null=True,
+    #     write_only=True
+    # )
 
     class Meta:
         model = CustomerGroup
         fields = '__all__'
 
-    def to_representation(self, instance):
-        """Return full Users data for group_leader_user"""
-        data = super().to_representation(instance)
+    # def to_representation(self, instance):
+    #     """Return full Users data for group_leader_user"""
+    #     data = super().to_representation(instance)
 
-        # এখানে Users এর পুরো serializer ব্যবহার করা হলো
-        if instance.group_leader_user:
-            from users.serializers import UsersSerializer  # import inside to avoid circular import
-            data['group_leader_user'] = UsersSerializer(instance.group_leader_user).data
-        else:
-            data['group_leader_user'] = None
+    #     # এখানে Users এর পুরো serializer ব্যবহার করা হলো
+    #     if instance.group_leader_user:
+    #         from users.serializers import UsersSerializer  # import inside to avoid circular import
+    #         data['group_leader_user'] = UsersSerializer(instance.group_leader_user).data
+    #     else:
+    #         data['group_leader_user'] = None
 
-        return data
+    #     return data
 
 
 # from_branch_name = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
@@ -66,15 +66,9 @@ class ContactSerializer(GlobalSerializers):
         data['branch_name'] = BranchSerializer(instance.branch_name).data if instance.branch_name else None
 
         return data
-
 class CustomerSerializer(GlobalSerializers):
-    # Writable ForeignKey
-    branch_name = serializers.PrimaryKeyRelatedField(
-        queryset=Branch.objects.all(), required=False, allow_null=True
-    )
-    guarantor = serializers.PrimaryKeyRelatedField(
-        queryset=Contact.objects.all(), required=False, allow_null=True
-    )
+    branch_name = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all(), required=False, allow_null=True)
+    guarantor = serializers.PrimaryKeyRelatedField(queryset=Contact.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Customer
@@ -83,13 +77,11 @@ class CustomerSerializer(GlobalSerializers):
     def to_representation(self, instance):
         data = super().to_representation(instance)
 
-        # 🔹 Branch full object
         if instance.branch_name:
             data['branch_name'] = BranchSerializer(instance.branch_name).data
         else:
             data['branch_name'] = None
 
-        # 🔹 Guarantor full object
         if instance.guarantor:
             data['guarantor'] = ContactSerializer(instance.guarantor).data
         else:

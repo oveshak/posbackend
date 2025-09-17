@@ -14,10 +14,10 @@ class RolesAdmin(ModelAdmin):
 class UsersAdmin(ModelAdmin):
     list_display = [
         'name', 'email', 'username', 'phone_number', 'branch',
-        'roles', 'is_admin', 'is_staff', 'is_verified', 'status'
+        'roles', 'is_admin', 'is_staff', 'is_verified', 'status','area'
     ]
     search_fields = ['name', 'email', 'username', 'phone_number']
-    list_filter = ['is_admin', 'is_staff', 'is_verified', 'status', 'branch', 'roles']
+    list_filter = ['is_admin', 'is_staff', 'is_verified', 'status', 'branch', 'roles','area']
     readonly_fields = ['last_login']
 
     fieldsets = (
@@ -25,7 +25,7 @@ class UsersAdmin(ModelAdmin):
             'fields': (
                 'email', 'username', 'name', 'phone_number', 'password', 'profile_picture',
                 'roles', 'branch', 'address', 'descriptions',
-                'nid_number', 'nid_front', 'nid_back'
+                'nid_number', 'nid_front', 'nid_back','area'
             )
         }),
         ('Permissions', {

@@ -4,8 +4,8 @@ from contacts.models import Contact, Customer
 from contacts.serializers import ContactSerializer, CustomerSerializer
 from products.models import Product
 from products.serializers import ProductSerializer
-from users.models import Branch, Users
-from users.serializers import BranchSerializer, UsersSerializer
+from users.models import Area, Branch, Users
+from users.serializers import AreaSerializer, BranchSerializer, UsersSerializer
 from .models import Purchase, PurchaseItem, PurchaseReturn, Sale, SaleItem, Payment, Cheque, AffiliateCommission,LoanType, InstallmentType, Installment, Loan
 from globalapp.serializers import GlobalSerializers
 
@@ -229,9 +229,23 @@ class AffiliateCommissionSerializer(GlobalSerializers):
 
 
 class LoanTypeSerializer(GlobalSerializers):
+    # Show full branch info in GET response
+    loan_branch = serializers.PrimaryKeyRelatedField(
+        queryset=Branch.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = LoanType
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Nested branch info
+        data['loan_branch'] = BranchSerializer(instance.loan_branch).data if instance.loan_branch else None
+        return data
+
 
 
 class InstallmentTypeSerializer(GlobalSerializers):
@@ -240,13 +254,36 @@ class InstallmentTypeSerializer(GlobalSerializers):
         fields = '__all__'
 
 
-class InstallmentSerializer(GlobalSerializers):
-    customer_name = serializers.CharField(source='customer.full_name', read_only=True)
-    received_by_name = serializers.CharField(source='received_by.username', read_only=True)
+
+class InstallmentSerializer(serializers.ModelSerializer):
+    # Accept IDs for input
+    customer_name = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all()
+    )
+    received_by = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all(), allow_null=True, required=False)
+    branch_name = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all(), allow_null=True, required=False)
+    area_name = serializers.PrimaryKeyRelatedField(queryset=Area.objects.all(), allow_null=True, required=False)
 
     class Meta:
         model = Installment
         fields = '__all__'
+
+    def to_representation(self, instance):
+        """Return nested objects for related fields instead of just IDs."""
+        data = super().to_representation(instance)
+
+        
+
+        # Nested received_by
+        data['received_by'] = UsersSerializer(instance.received_by).data if instance.received_by else None
+
+        # Nested branch
+        data['branch_name'] = BranchSerializer(instance.branch_name).data if instance.branch_name else None
+
+        # Nested area
+        data['area_name'] = AreaSerializer(instance.area_name).data if instance.area_name else None
+
+        return data
 
 
 class LoanSerializer(GlobalSerializers):

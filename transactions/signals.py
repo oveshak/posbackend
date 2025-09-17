@@ -115,6 +115,9 @@ def create_installments(sender, instance, created, **kwargs):
             installment_date=inst_date,
             amount=amount,
             installment_status="due",
+            area_name=instance.area_name,
+            branch_name=instance.branch_name,
+            loan_id=instance.id
         )
         installments.append(installment)
         print(f"  Installment {i+1}: Date={inst_date}, Amount={amount:.2f}, Remaining={remaining_amount:.2f}")

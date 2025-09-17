@@ -52,18 +52,75 @@ class MyUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
+# class Area(Common):
+#     name = models.CharField(
+#         max_length=100,
+#         verbose_name="Area Name"
+#     )
+  
+#     address = models.TextField(verbose_name="Address")
+  
+#     area_staf = models.ManyToManyField(
+#         'Users',
+#         blank=True,
+#         verbose_name="AreaStaf"
+#     )
+   
+#     history = HistoricalRecords()
+
+#     class Meta:
+#         verbose_name = "Area"
+#         verbose_name_plural = "Areas"
+
+#     def __str__(self):
+#         return self.name
+
+
+# class Branch(Common):
+#     name = models.CharField(
+#         max_length=100,
+#         verbose_name="Branch Name"
+#     )
+#     address = models.TextField(verbose_name="Address")
+#     phone = models.CharField(
+#         max_length=20,
+#         verbose_name="Phone"
+#     )
+#     manager = models.ForeignKey(
+#         'Users',
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name='managed_branch',
+#         verbose_name="Manager"
+#     )
+#     total_area = models.ManyToManyField(
+#         'Area',
+#         blank=True,
+#         verbose_name="TotalArea"
+#     )
+#     history = HistoricalRecords()
+
+#     class Meta:
+#         verbose_name = "Branch"
+#         verbose_name_plural = "Branches"
+
+#     def __str__(self):
+#         return self.name
+
 class Area(Common):
-    name = models.CharField(
-        max_length=100,
-        verbose_name="Area Name"
-    )
-  
+    name = models.CharField(max_length=100, verbose_name="Area Name")
     address = models.TextField(verbose_name="Address")
-  
-    area_staf = models.ManyToManyField(
-        'Users',
+    area_staf = models.ManyToManyField('Users', blank=True, related_name='staffed_areas',verbose_name="AreaStaf")
+
+    # Branch এর সাথে একদিকের FK
+    parent_branch = models.ForeignKey(
+        "Branch",
+        on_delete=models.CASCADE,
+        related_name="areas",
+        null=True,
         blank=True,
-        verbose_name="AreaStaf"
+        verbose_name="Branch"
     )
     history = HistoricalRecords()
 
@@ -76,28 +133,26 @@ class Area(Common):
 
 
 class Branch(Common):
-    name = models.CharField(
-        max_length=100,
-        verbose_name="Branch Name"
-    )
+    name = models.CharField(max_length=100, verbose_name="Branch Name")
     address = models.TextField(verbose_name="Address")
-    phone = models.CharField(
-        max_length=20,
-        verbose_name="Phone"
-    )
+    phone = models.CharField(max_length=20, verbose_name="Phone")
     manager = models.ForeignKey(
         'Users',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='managed_branch',
+        related_name='managed_branches',
         verbose_name="Manager"
     )
+
+    # Branch ↔ Area many-to-many
     total_area = models.ManyToManyField(
         'Area',
         blank=True,
+        related_name="branches",
         verbose_name="TotalArea"
     )
+
     history = HistoricalRecords()
 
     class Meta:
@@ -106,7 +161,6 @@ class Branch(Common):
 
     def __str__(self):
         return self.name
-
 
 class Users(AbstractBaseUser, PermissionsMixin):
     status = models.BooleanField(
@@ -219,6 +273,14 @@ class Users(AbstractBaseUser, PermissionsMixin):
         blank=True,
         related_name='users',
         verbose_name="Branch"
+    )
+    area = models.ForeignKey(
+        Area,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='userss_area',  # <-- unique reverse name
+        verbose_name="Area"
     )
     history = HistoricalRecords()
 
